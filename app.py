@@ -89,4 +89,19 @@ try:
 except Exception as e:
     st.error(f"Error creating pie charts: {e}")
 
+#=========================== Highest Show of Force Bar Chart ===============================#
+st.markdown('---')
+st.subheader('Distribution of Highest Show of Force')
+query_show_force = "SELECT highest_show_of_force FROM incident_reports"
+try:
+    df_show_force = pd.read_sql(query_show_force, conn)
+    force_counts = (df_show_force['highest_show_of_force'].fillna('Unknown').str.strip().value_counts().reset_index())
+    force_counts.columns = ['Highest Show of Force', 'Count']
+
+    figure_force = px.bar(force_counts, x='Highest Show of Force', y='Count', text='Count', color='Highest Show of Force', color_discrete_sequence = px.colors.qualitative.Set2)
+    figure_force.update_traces(textposition = 'outside')
+    figure_force.update_layout(xaxis_title = 'Show of Force Type', yaxis_title = 'Number of Incidents', showlegend = False, xaxis_tickangle = -30)
+    st.plotly_chart(figure_force, use_container_width = True)
+except Exception as e:
+    st.error(f"Error loading show of force charts: {e}")
 
