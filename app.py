@@ -49,13 +49,22 @@ st.markdown("---")
 
 st.subheader('Data Sample')
 
-query_sample = 'SELECT * FROM incident_reports LIMIT 20'
-
 try:
-    df_sample = pd.read_sql(query_sample,conn)
+    query_sample_incident_reports = 'SELECT * FROM incident_reports LIMIT 20'
+    df_sample_incident_reports = pd.read_sql(query_sample_incident_reports,conn)
+    st.caption('20 Sample Rows from incident_reports Table')
+    st.dataframe(df_sample_incident_reports, use_container_width=True)
 
-    st.dataframe(df_sample, use_container_width=True)
-    st.caption('20 Sample Rows from incident_reports')
+    query_sample_citizens = 'SELECT * FROM citizens LIMIT 20'
+    df_sample_citizens = pd.read_sql(query_sample_citizens,conn)
+    st.caption('20 Sample Rows from citizens Table')
+    st.dataframe(df_sample_citizens, use_container_width=True)
+
+    query_sample_incident_details = 'SELECT * FROM incident_details LIMIT 20'
+    df_sample_incident_details = pd.read_sql(query_sample_incident_details,conn)
+    st.caption('20 Sample Rows from incident_details Table')
+    st.dataframe(df_sample_incident_details, use_container_width=True)
+
 except Exception as e:
     st.error(f"Error loading sample data: {e}")
 
