@@ -1,17 +1,16 @@
 import streamlit as st
 import pandas as pd
 import psycopg2
-from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
 #================================== Database Connection ==================================#
 
-# Load .env file
-load_dotenv()
+# Load .env file (not needed in Docker Compose)
+# load_dotenv(find_dotenv(), verbose=True)
 
 DB_PARAMS = {
     "dbname": os.getenv("POSTGRES_DB"), 
@@ -83,7 +82,7 @@ try:
     # Loop through all races
     for race in df_pie['race'].unique():
         # If a race is not null
-        if race:
+        if pd.notna(race):
             # Get only rows of that race
             df_pie_race = df_pie[df_pie['race'].notna() & df_pie['race'].str.contains(race)]
             # Get the counts of each charge
