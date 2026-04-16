@@ -2,10 +2,23 @@
 
 By Elias Ortiz, Bobby Cuellar, Brody Mitchell, and Jay Yan
 
-## Introduction and Repository Layout
+## Introduction
 
 This repository contains a dockerized batch-loaded data pipeline that loads and presents data from the City of Phoenix Police Officer Show of Force dataset, which can be found at the following link:
 https://www.phoenixopendata.com/dataset/officer-show-of-force/resource/7e9d5fc7-ce02-4108-80af-369b1b54c4ff
+
+The online database consists of a single table where each row is a single show of force incident report. For context, a "show of force" is a event where a police officer attempts to gain compliance by demonstrating authority without immediately resorting to physical force. This database specifically focuses on incidents where a Phoenix police officer pointed a weapon system (a firearm or non-lethal weapon) at or in the direction of a suspect. Each incident includes the location, time, show of force type (what type of weapon), as well as various characteristics of the suspect (age, race, gender, etc.). We chose this dataset because it offers a number of avenues for analysis. For instance, much of our analysis was focused on at the distribution of show of force incidents (and what types of incidents) across various suspect demographics to see if there were any noticeable trends. These types of analyses let us observe if there are any potential biases that indicate that a situation is more likely to lead to a show of force incident.
+
+## Pipeline Description and Repository Layout
+The pipeline loads the data from the online API, cleans/transforms it into a normalized format (as shown in the ERD), and then loads the data into a PostgreSQL database. The contents of this database are then displayed using a Streamlit dashboard containing a number of interactive visualizations.
+
+The contributions of each team member can be found below:
+| Team Member | Contributions |
+| --- | --- |
+| Elias Ortiz | repository setup, ETL script creation, dockerization setup, README creation |
+| Bobby Cuellar | ERD and schema formulation, Streamlit dashboard creation |
+| Brody Mitchell | ERD and schema formulation, presentation creation |
+| Jay Yan | ERD and schema formulation, Streamlit dashboard creation |
 
 Explanations for each of the files in the database can be found below:
 
@@ -24,17 +37,9 @@ Explanations for each of the files in the database can be found below:
 
 ## Setup
 
-The only setup step is to create the ```.env``` file that will be used by the pipeline. Create a file named ```.env``` in the project directory and add the following lines:
+The only setup step is to create the ```.env``` file that will be used by the pipeline. The template ```.env.sample``` is provided, so you just need to create a copy of it and rename it to ```.env```.
 
-```bash
-POSTGRES_DB=ProjectDB
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=YOURPASSWORD
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-```
-
-Replace the password field with your PostgreSQL password. You can leave the other fields as they are.
+Replace the value of ```POSTGRES_PASSWORD``` with your PostgreSQL password. You can leave the other fields as they are.
 
 You're now all set up. To make sure everything was done correctly, try running the pipeline as shown in the next section.
 
