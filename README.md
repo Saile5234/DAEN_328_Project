@@ -17,7 +17,7 @@ The contributions of each team member can be found below:
 | --- | --- |
 | Elias Ortiz | repository setup, ETL script creation, dockerization setup, README creation |
 | Bobby Cuellar | ERD and schema formulation, Streamlit dashboard creation |
-| Brody Mitchell | ERD and schema formulation, presentation creation |
+| Brody Mitchell | ERD and schema formulation, Streamlit dashboard creation, presentation creation |
 | Jay Yan | ERD and schema formulation, Streamlit dashboard creation |
 
 Explanations for each of the files in the database can be found below:
