@@ -24,7 +24,7 @@ Explanations for each of the files in the database can be found below:
 
 | File | Description | Author |
 | --- | --- | --- |
-| app.py | Python script handling the Streamlit dashboard and all queries/visualizations contained therein | Elias Ortiz, Bobby Cuellar, Jay Yan |
+| app.py | Python script handling the Streamlit dashboard and all queries/visualizations contained therein | Elias Ortiz, Bobby Cuellar, Jay Yan, Brody Mitchell |
 | docker-compose.yaml | Docker compose file | Elias Ortiz |
 | Dockerfile.app | Dockerfile for app.py | Elias Ortiz |
 | Dockerfile.ETL | Dockerfile for ETL.py | Elias Ortiz |
