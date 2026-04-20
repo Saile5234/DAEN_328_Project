@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import psycopg2
-import matplotlib.pyplot as plt
 import plotly.express as px
 from dotenv import load_dotenv
 import os
@@ -107,7 +106,13 @@ selected_age_range = st.sidebar.slider(
     value=(min_age, max_age)
 )
 
-sample_limit = st.sidebar.slider("Sample Row Limit", min_value=5, max_value=50, value=20, step=5)
+sample_limit = st.sidebar.slider(
+    "Sample Row Limit",
+    min_value=5,
+    max_value=50,
+    value=20,
+    step=5
+)
 
 #================================ Helper for Shared Filters ===============================#
 
@@ -137,14 +142,19 @@ def build_shared_filters():
 
     return where_clause, params
 
+shared_where, shared_params = build_shared_filters()
+
+def append_condition(where_clause, extra_condition):
+    if where_clause.strip():
+        return where_clause + " AND " + extra_condition
+    return " WHERE " + extra_condition
+
 #=================================== Sample Data Table ===================================#
 
 st.markdown("---")
 st.subheader('Data Sample')
 
 try:
-    shared_where, shared_params = build_shared_filters()
-
     query_sample_incident_reports = f"""
         SELECT DISTINCT r.*
         FROM incident_reports r
@@ -196,45 +206,92 @@ try:
 except Exception as e:
     st.error(f"Error loading sample data: {e}")
 
-#=============================== Charge By Race Bar Charts ===============================#
+#======================== 1. Race Distribution of Citizens in Incidents ===================#
 
 st.markdown("---")
-st.subheader('Distribution of Charge by Race')
+st.subheader("Race Distribution of Citizens in Incidents")
 
-query_charge_race = f"""
-    SELECT c.race, d.citizen_charge
+query_race_distribution = f"""
+    SELECT c.race, COUNT(*) AS count
+    FROM incident_details d
+    JOIN citizens c
+        ON d.citizen_num = c.citizen_num
+    JOIN incident_reports r
+        ON d.incident_report_num = r.incident_report_num
+    {append_condition(shared_where, "c.race IS NOT NULL")}
+    GROUP BY c.race
+    ORDER BY count DESC
+"""
+
+try:
+    df_race_distribution = pd.read_sql(
+        query_race_distribution, conn, params=shared_params
+    )
+
+    if df_race_distribution.empty:
+        st.warning("No race distribution data available for the selected filters.")
+    else:
+        figure_race_distribution = px.pie(
+            df_race_distribution,
+            names='race',
+            values='count',
+            title='Race Distribution'
+        )
+        st.plotly_chart(figure_race_distribution, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error loading race distribution chart: {e}")
+
+#=============================== 2. Most Common Citizen Charges ===========================#
+
+st.markdown("---")
+st.subheader("Most Common Citizen Charges")
+
+query_charge_distribution = f"""
+    SELECT
+        COALESCE(d.citizen_charge, 'Unknown') AS citizen_charge,
+        COUNT(*) AS count
     FROM incident_details d
     JOIN citizens c
         ON d.citizen_num = c.citizen_num
     JOIN incident_reports r
         ON d.incident_report_num = r.incident_report_num
     {shared_where}
+    GROUP BY COALESCE(d.citizen_charge, 'Unknown')
+    ORDER BY count DESC
+    LIMIT 15
 """
 
 try:
-    df_charge_race = pd.read_sql(query_charge_race, conn, params=shared_params)
+    df_charge_distribution = pd.read_sql(
+        query_charge_distribution, conn, params=shared_params
+    )
 
-    if df_charge_race.empty:
-        st.warning("No data available for the selected filters.")
+    if df_charge_distribution.empty:
+        st.warning("No citizen charge data available for the selected filters.")
     else:
-        for race in df_charge_race['race'].dropna().unique():
-            df_race = df_charge_race[df_charge_race['race'] == race]
-            counts = df_race['citizen_charge'].value_counts()
-
-            fig, ax = plt.subplots()
-            ax.bar(counts.index, counts.values)
-            plt.xticks(rotation=45, ha='right')
-            ax.set_title(f"{race}")
-            ax.set_xlabel("Citizen Charge")
-            ax.set_ylabel("Count")
-            st.pyplot(fig)
+        figure_charge_distribution = px.bar(
+            df_charge_distribution,
+            x='citizen_charge',
+            y='count',
+            text='count',
+            color='citizen_charge'
+        )
+        figure_charge_distribution.update_traces(textposition='outside')
+        figure_charge_distribution.update_layout(
+            xaxis_title='Citizen Charge',
+            yaxis_title='Count',
+            showlegend=False,
+            xaxis_tickangle=-35
+        )
+        st.plotly_chart(figure_charge_distribution, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Error creating charge by race charts: {e}")
+    st.error(f"Error loading charge distribution chart: {e}")
 
-#=========================== Highest Show of Force Bar Chart ==============================#
+#========================== 3. Distribution of Highest Show of Force ======================#
 
-st.markdown('---')
+st.markdown("---")
 st.subheader('Distribution of Highest Show of Force')
 
 query_show_force = f"""
@@ -280,4 +337,100 @@ try:
         st.plotly_chart(figure_force, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Error loading show of force charts: {e}")
+    st.error(f"Error loading show of force chart: {e}")
+
+#=============================== 4. Highest Show of Force by Race =========================#
+
+st.markdown("---")
+st.subheader("Highest Show of Force by Race")
+
+query_force_by_race = f"""
+    SELECT
+        c.race,
+        COALESCE(r.highest_show_of_force, 'Unknown') AS highest_show_of_force,
+        COUNT(*) AS count
+    FROM incident_details d
+    JOIN citizens c
+        ON d.citizen_num = c.citizen_num
+    JOIN incident_reports r
+        ON d.incident_report_num = r.incident_report_num
+    {append_condition(shared_where, "c.race IS NOT NULL")}
+    GROUP BY c.race, COALESCE(r.highest_show_of_force, 'Unknown')
+    ORDER BY c.race, count DESC
+"""
+
+try:
+    df_force_by_race = pd.read_sql(query_force_by_race, conn, params=shared_params)
+
+    if df_force_by_race.empty:
+        st.warning("No show-of-force by race data available for the selected filters.")
+    else:
+        figure_force_by_race = px.bar(
+            df_force_by_race,
+            x='race',
+            y='count',
+            color='highest_show_of_force',
+            barmode='group',
+            text='count'
+        )
+        figure_force_by_race.update_traces(textposition='outside')
+        figure_force_by_race.update_layout(
+            xaxis_title='Race',
+            yaxis_title='Count',
+            legend_title='Highest Show of Force'
+        )
+        st.plotly_chart(figure_force_by_race, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error loading show-of-force by race chart: {e}")
+
+#=============================== 5. Distribution of Charge by Race ========================#
+
+st.markdown("---")
+st.subheader('Distribution of Charge by Race')
+
+query_charge_race = f"""
+    SELECT
+        c.race,
+        COALESCE(d.citizen_charge, 'Unknown') AS citizen_charge,
+        COUNT(*) AS count
+    FROM incident_details d
+    JOIN citizens c
+        ON d.citizen_num = c.citizen_num
+    JOIN incident_reports r
+        ON d.incident_report_num = r.incident_report_num
+    {append_condition(shared_where, "c.race IS NOT NULL")}
+    GROUP BY c.race, COALESCE(d.citizen_charge, 'Unknown')
+    ORDER BY c.race, count DESC
+"""
+
+try:
+    df_charge_race = pd.read_sql(query_charge_race, conn, params=shared_params)
+
+    if df_charge_race.empty:
+        st.warning("No charge by race data available for the selected filters.")
+    else:
+        figure_charge_race = px.bar(
+            df_charge_race,
+            x='race',
+            y='count',
+            color='citizen_charge',
+            barmode='stack'
+        )
+        figure_charge_race.update_layout(
+            xaxis_title='Race',
+            yaxis_title='Count',
+            legend_title='Citizen Charge'
+        )
+        st.plotly_chart(figure_charge_race, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error loading charge by race chart: {e}")
+
+#=================================== Closing Note =========================================#
+
+st.markdown("---")
+st.caption(
+    "This dashboard summarizes demographic patterns, citizen charges, and police "
+    "show-of-force categories in the Phoenix Show of Force dataset based on the selected filters."
+)
