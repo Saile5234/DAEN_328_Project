@@ -349,7 +349,7 @@ print("#-------- Transformation completed successfully --------#")
 print("#----------------- Beginning loading -------------------#")
 
 # Load .env file (not needed in Docker Compose)
-# load_dotenv(find_dotenv(), verbose=True)
+#load_dotenv(find_dotenv(), verbose=True)
 
 # Get database parameters
 DB_PARAMS = {

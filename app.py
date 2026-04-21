@@ -426,7 +426,89 @@ try:
 
 except Exception as e:
     st.error(f"Error loading charge by race chart: {e}")
+#========================= Sunburst: Race, Charge, and Force ==============================#
 
+st.markdown("---")
+st.subheader("Sunburst: Race, Charge, and Highest Show of Force")
+
+query_sunburst = f"""
+    SELECT
+        COALESCE(c.race, 'Unknown') AS race,
+        COALESCE(d.citizen_charge, 'Unknown') AS citizen_charge,
+        COALESCE(r.highest_show_of_force, 'Unknown') AS highest_show_of_force,
+        COUNT(*) AS count
+    FROM incident_details d
+    JOIN citizens c
+        ON d.citizen_num = c.citizen_num
+    JOIN incident_reports r
+        ON d.incident_report_num = r.incident_report_num
+    {shared_where}
+    GROUP BY
+        COALESCE(c.race, 'Unknown'),
+        COALESCE(d.citizen_charge, 'Unknown'),
+        COALESCE(r.highest_show_of_force, 'Unknown')
+    ORDER BY count DESC
+    LIMIT 50
+"""
+
+try:
+    df_sunburst = pd.read_sql(
+        query_sunburst,
+        conn,
+        params=shared_params
+    )
+
+    if df_sunburst.empty:
+        st.warning("No sunburst data available for the selected filters.")
+    else:
+        figure_sunburst = px.sunburst(
+            df_sunburst,
+            path=["race", "citizen_charge", "highest_show_of_force"],
+            values="count",
+            title="Race → Citizen Charge → Highest Show of Force"
+        )
+
+        st.plotly_chart(figure_sunburst, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error loading sunburst chart: {e}")
+#=================================== KPI Summary Cards ===================================#
+
+st.markdown("---")
+st.subheader("Dashboard Summary")
+
+query_summary = f"""
+    SELECT
+        COUNT(DISTINCT r.incident_report_num) AS total_incidents,
+        COUNT(DISTINCT c.citizen_num) AS total_citizens,
+        COUNT(*) AS total_records,
+        COUNT(DISTINCT r.highest_show_of_force) AS force_types
+    FROM incident_details d
+    JOIN citizens c
+        ON d.citizen_num = c.citizen_num
+    JOIN incident_reports r
+        ON d.incident_report_num = r.incident_report_num
+    {shared_where}
+"""
+
+try:
+    df_summary = pd.read_sql(query_summary, conn, params=shared_params)
+
+    if not df_summary.empty:
+        total_incidents = int(df_summary.loc[0, "total_incidents"])
+        total_citizens = int(df_summary.loc[0, "total_citizens"])
+        total_records = int(df_summary.loc[0, "total_records"])
+        force_types = int(df_summary.loc[0, "force_types"])
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Total Incidents", f"{total_incidents:,}")
+        col2.metric("Total Citizens", f"{total_citizens:,}")
+        col3.metric("Filtered Records", f"{total_records:,}")
+        col4.metric("Force Categories", f"{force_types:,}")
+
+except Exception as e:
+    st.error(f"Error loading dashboard summary: {e}")
 #=================================== Closing Note =========================================#
 
 st.markdown("---")
