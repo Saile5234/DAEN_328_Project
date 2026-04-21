@@ -29,7 +29,7 @@ Explanations for each of the files in the database can be found below:
 | Dockerfile.app | Dockerfile for app.py | Elias Ortiz |
 | Dockerfile.ETL | Dockerfile for ETL.py | Elias Ortiz |
 | ERD.png | Image of the ERD used for this dataset | Elias Ortiz |
-| ETL.py | Python script handling the Extraction of the data from the online API, its Transformation into a readable/normalized format, and Loading it into the PostgreSQL database | Elias Ortiz |
+| ETL.py | Python script handling the Extraction of the data from the online API, its Transformation into a readable/normalized format, and Loading it into the PostgreSQL database | Elias Ortiz, Bobby Cuellar |
 | ETL_workspace.ipynb | Testing workspace for setting up the ETL process; contains explanations of the thought process and logic behind the decisions made | Elias Ortiz |
 | project_ERD.pgerd | pgAdmin4 ERD file for the ERD shown in ERD.png | Elias Ortiz |
 | README.md | Explanatory information and instructions | Elias Ortiz |
