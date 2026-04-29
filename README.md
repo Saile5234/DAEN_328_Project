@@ -52,3 +52,9 @@ You're now all set up. To make sure everything was done correctly, try running t
 5. Wait for the ETL process to complete. When you see "You can now view your Streamlit app in your browser.", you can use the following link to access the dashboard: http://localhost:8501
 6. You should now be able to see the dashboard and analyze the data.
 7. When finished, return to the terminal and enter ```docker compose down -v``` to terminate the pipeline and delete any data volumes.
+
+## Sample Dashboard Screenshots
+
+![alt text](dashboard_screenshot_1.PNG)
+
+![alt text](dashboard_screenshot_2.PNG)
